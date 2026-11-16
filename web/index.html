@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <title>HaUps — Hàng đợi ảnh</title>
+    <link rel="icon" type="image/svg+xml" href="/assets/logo.svg" />
+    <link rel="stylesheet" href="/assets/style.css" />
+    <script src="/assets/app.js" type="module"></script>
+  </head>
+  <body>
+    <header>
+      <a class="brand" href="/" aria-label="HaUps, trang chủ"><img src="/assets/logo.svg" alt="" width="24" height="24" /><span>Ha<span class="brand-accent">Ups</span></span></a>
+    </header>
+    <main>
+      <div class="workspace">
+        <section
+          id="preview-panel"
+          class="panel preview-panel"
+          aria-label="Xem và so sánh ảnh"
+        >
+          <div class="preview-heading">
+            <div class="preview-title">
+              <h2 id="preview-name" title="Xem ảnh">Xem ảnh</h2>
+              <p id="preview-meta"></p>
+            </div>
+            <div
+              id="preview-mode"
+              class="preview-mode"
+              role="group"
+              aria-label="Chế độ xem"
+              hidden
+            >
+              <button
+                id="mode-upscale"
+                class="mode-button"
+                type="button"
+                aria-pressed="true"
+              >
+                Upscale
+              </button>
+              <button
+                id="mode-wallpaper"
+                class="mode-button"
+                type="button"
+                aria-pressed="false"
+              >
+                Hình nền AI
+              </button>
+            </div>
+            <div class="viewer-controls" role="toolbar" aria-label="Điều khiển khung xem">
+              <output id="zoom-value">100%</output>
+              <button id="zoom-fit" class="zoom-button" type="button" disabled>Vừa khung</button>
+              <button id="zoom-actual" class="zoom-button" type="button" aria-label="Kích thước thật" disabled>1:1</button>
+            </div>
+          </div>
+          <p id="comparison-help" class="hint"></p>
+          <div class="viewport-frame">
+            <div id="image-viewport" tabindex="0" aria-label="Khung xem ảnh">
+              <div class="viewport-content">
+                <div id="preview-placeholder" class="preview-placeholder">
+                  Chọn ảnh để xem trước hoặc chọn một kết quả trong hàng đợi.
+                </div>
+                <div class="comparison" hidden>
+                  <img id="after" alt="Ảnh đã upscale" draggable="false" />
+                  <div id="before-mask">
+                    <img id="before" alt="Ảnh gốc" draggable="false" />
+                  </div>
+                  <div id="split-divider" aria-hidden="true">
+                    <span>‹ ›</span>
+                  </div>
+                  <input
+                    id="compare-range"
+                    type="range"
+                    min="0"
+                    max="100"
+                    value="50"
+                    disabled
+                    aria-label="Vạch chia ảnh gốc bên trái và ảnh upscale bên phải"
+                    aria-describedby="comparison-help"
+                  />
+                </div>
+              </div>
+            </div>
+            <div id="wheel-hint" class="wheel-hint" role="status" aria-live="polite" hidden>
+              Ctrl + lăn chuột để phóng to
+            </div>
+          </div>
+          <div id="preview-footer" class="preview-footer" aria-label="Tác vụ kết quả" hidden>
+            <div id="result-group" class="footer-group" hidden>
+              <h3 class="group-label">Kết quả</h3>
+              <a id="preview-download" class="button outline" hidden>Tải PNG</a>
+              <div class="full-size" id="preview-links" hidden>
+                <a id="source-link" class="footer-link" target="_blank" rel="noopener">Mở ảnh gốc</a>
+                <a
+                  id="result-link"
+                  class="footer-link"
+                  target="_blank"
+                  rel="noopener"
+                  aria-label="Mở kết quả ở kích thước thật"
+                  title="Mở kết quả ở kích thước thật"
+                  >Kích thước thật</a
+                >
+              </div>
+            </div>
+            <form id="wallpaper-form" class="footer-group wallpaper-export" hidden>
+              <h3 class="group-label">Hình nền AI · 3840 × 2160</h3>
+              <!-- Diffusion text encoder (CLIP) only understands English -->
+              <label for="wallpaper-prompt" class="field-label">Mô tả nền <span class="optional">(tùy chọn, tiếng Anh)</span></label>
+              <input id="wallpaper-prompt" name="prompt" type="text" maxlength="500" autocomplete="off" spellcheck="false" placeholder="beach at sunset, palm trees" aria-describedby="wallpaper-prompt-hint">
+              <p id="wallpaper-prompt-hint" class="hint">Để trống: AI tự đoán nền từ ảnh.</p>
+              <p id="wallpaper-scene" class="hint" hidden></p>
+              <button
+                id="wallpaper-create"
+                type="submit"
+                class="button outline"
+                title="AI dựa vào ảnh hiện tại để vẽ tiếp phần nền thiếu"
+              >
+                Tạo hình nền AI
+              </button>
+              <div id="wallpaper-result" class="wallpaper-actions" hidden>
+                <a id="wallpaper-download" class="button outline">Tải hình nền</a>
+                <a
+                  id="wallpaper-open"
+                  class="footer-link"
+                  target="_blank"
+                  rel="noopener"
+                  aria-label="Xem hình nền AI 3840 × 2160 ở tab mới"
+                  title="Xem hình nền AI 3840 × 2160 ở tab mới"
+                  >Mở</a
+                >
+              </div>
+              <p id="wallpaper-status" class="hint" role="status" hidden></p>
+            </form>
+          </div>
+        </section>
+        <div class="sidebar">
+          <section class="panel settings" aria-label="Chọn ảnh và cấu hình">
+            <form id="upload-form">
+              <div id="dropzone" class="dropzone">
+                <svg
+                  viewBox="0 0 48 48"
+                  class="upload-icon"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.2"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M24 31V6m-11 11L24 6l11 11M7 30v10a3 3 0 0 0 3 3h28a3 3 0 0 0 3-3V30"
+                  />
+                </svg>
+                <span class="dropzone-text">Kéo thả ảnh</span>
+                <label class="button outline picker" for="files"
+                  >Chọn nhiều ảnh<input
+                    id="files"
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    multiple
+                    aria-label="Chọn nhiều ảnh"
+                /></label>
+              </div>
+              <div id="selection" hidden>
+                <div class="selection-title">
+                  <strong id="selected-count" role="status"></strong
+                  ><button id="clear-selection" class="text-button" type="button">
+                    Bỏ chọn tất cả
+                  </button>
+                </div>
+                <ul id="selected-files"></ul>
+              </div>
+              <label for="preset">Loại ảnh</label>
+              <select id="preset" name="preset" aria-describedby="preset-help">
+                <option value="photo">Ảnh chụp</option>
+                <option value="anime" selected>Anime / Minh họa</option>
+              </select>
+              <p class="hint" id="preset-help">
+                Anime / Minh họa: ảnh vẽ, truyện tranh, tranh kỹ thuật số.
+              </p>
+              <div class="original-info">
+                <span>Kích thước gốc</span>
+                <strong id="original-size" aria-live="polite"
+                  >Chọn ảnh để xem</strong
+                >
+                <span id="size-reference"></span>
+              </div>
+              <fieldset class="scale-options" id="scale-options">
+                <legend>Chọn kích thước đầu ra</legend>
+                <label class="scale-option"
+                  ><input
+                    type="radio"
+                    name="scale"
+                    id="scale-2"
+                    value="2"
+                    checked
+                  /><span class="scale-factor">2×</span
+                  ><span class="scale-output" data-scale-size="2"
+                    >Chưa có ảnh</span
+                  ></label
+                >
+                <label class="scale-option"
+                  ><input type="radio" name="scale" id="scale-4" value="4" /><span
+                    class="scale-factor"
+                    >4×</span
+                  ><span class="scale-output" data-scale-size="4"
+                    >Chưa có ảnh</span
+                  ></label
+                >
+                <label class="scale-option"
+                  ><input type="radio" name="scale" id="scale-8" value="8" /><span
+                    class="scale-factor"
+                    >8×</span
+                  ><span class="scale-output" data-scale-size="8"
+                    >Chưa có ảnh</span
+                  ></label
+                >
+              </fieldset>
+              <p class="hint" id="scale-hint">
+                Ảnh chụp 2×: xử lý 4× rồi thu nhỏ.
+              </p>
+              <button id="submit" class="button primary" type="submit" disabled>
+                Thêm vào hàng đợi
+              </button>
+              <p class="limits">
+                PNG/JPG/WebP · ≤ 50 MB · ≤ 16 MP · ≤ 20 ảnh/lần
+              </p>
+            </form>
+            <p
+              id="notice"
+              class="notice"
+              role="status"
+              aria-live="polite"
+              hidden
+            ></p>
+          </section>
+          <section class="panel queue" aria-labelledby="queue-title">
+            <div class="queue-heading">
+              <h2 id="queue-title" tabindex="-1">Hàng đợi</h2>
+              <span id="count">0 ảnh</span>
+            </div>
+            <progress
+              id="progress"
+              max="1"
+              value="0"
+              aria-label="Số ảnh đã hoàn tất"
+            ></progress>
+            <p
+              id="summary"
+              class="queue-summary"
+              role="status"
+              aria-live="polite"
+            ></p>
+            <div id="bulk-bar" class="bulk-bar" aria-label="Tải hàng loạt">
+              <label class="bulk-check"><input id="select-all-jobs" type="checkbox" disabled />Chọn tất cả</label>
+              <span id="bulk-selected-count" class="bulk-count" role="status" aria-live="polite">Đã chọn 0 ảnh</span>
+              <label class="bulk-check"><input id="include-wallpaper" type="checkbox" checked />Kèm hình nền AI</label>
+              <div class="bulk-actions">
+                <button id="download-selected" class="button outline" type="button" disabled>Tải đã chọn</button>
+                <button id="download-all" class="button outline" type="button" disabled>Tải tất cả</button>
+              </div>
+            </div>
+            <div id="empty" class="empty">
+              <h3>Chưa có ảnh trong hàng đợi</h3>
+              <p>Chọn ảnh để bắt đầu xử lý.</p>
+            </div>
+            <ol id="jobs" aria-label="Danh sách ảnh"></ol>
+          </section>
+        </div>
+      </div>
+    </main>
+    <template id="job-template"
+      ><li class="job">
+        <input class="job-select" type="checkbox" />
+        <button class="open-job thumbnail-button" type="button"><img class="thumbnail" alt="" loading="lazy" /></button>
+        <div class="job-info">
+          <button class="filename open-job text-button" type="button"></button><span class="job-meta"></span
+          ><span class="job-status"></span>
+        </div>
+        <button class="text-button remove-job" type="button">Bỏ khỏi hàng đợi</button>
+        <div class="job-actions">
+          <a class="button outline download">Tải PNG</a>
+        </div>
+      </li></template
+    >
+  </body>
+</html>

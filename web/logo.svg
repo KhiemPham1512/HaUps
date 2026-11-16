@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <defs>
+    <linearGradient id="hau-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b756c"/>
+      <stop offset="1" stop-color="#4f46e5"/>
+    </linearGradient>
+  </defs>
+  <rect width="32" height="32" rx="8" fill="url(#hau-bg)"/>
+  <!-- upscale arrow: pixel-stepped left half (low-res), smooth right half (upscaled) -->
+  <path d="M16 5H13V8.5H10V12H6.5V15.5H12V27H16Z" fill="#fff" fill-opacity=".72"/>
+  <path d="M16 5L25.5 15.5H20V27H16Z" fill="#fff"/>
+  <!-- anime sparkle -->
+  <path d="M25.5 19Q26 22.6 29.5 23Q26 23.4 25.5 27Q25 23.4 21.5 23Q25 22.6 25.5 19Z" fill="#fde68a"/>
+</svg>
